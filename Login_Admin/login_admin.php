@@ -1,0 +1,222 @@
+<?php
+
+require_once '../Backend/db.php';
+
+session_start();
+// proteger página: redirecionar se não estiver logado
+if (empty($_SESSION['user_id'])) {
+    header('Location: ../Pagina_Inicial/index.html');
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Paróquia Sagrado Coração de Jesus</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header Admin -->
+        <header class="admin-header">
+            <div class="admin-nav">
+                <div class="admin-nav-left">
+                    <img src="../imagem/logo_sagrado 01.png" alt="Logo Paróquia" class="logo-admin">
+                    <h1>Painel Administrativo</h1>
+                </div>
+                <div class="admin-nav-right">
+                    <button class="logout-btn" id="logout">
+                        <i class="fa-solid fa-sign-out-alt"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <nav class="admin-menu">
+                <ul>
+                    <li><a href="#dashboard" class="menu-item active" data-section="dashboard">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
+                    </a></li>
+                    <li><a href="#usuarios" class="menu-item" data-section="usuarios">
+                        <i class="fa-solid fa-users"></i> Usuários Admin
+                    </a></li>
+                    <li><a href="#noticias" class="menu-item" data-section="noticias">
+                        <i class="fa-solid fa-newspaper"></i> Notícias
+                    </a></li>
+                    <li><a href="../Pagina_Inicial/index.html" class="menu-item">
+                        <i class="fa-solid fa-home"></i> Ver Site
+                    </a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="admin-section active">
+                <h2>Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fa-solid fa-users"></i>
+                        <div class="stat-info">
+                            <h3 id="totalUsuarios">0</h3>
+                            <p>Usuários Admin</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fa-solid fa-newspaper"></i>
+                        <div class="stat-info">
+                            <h3 id="totalNoticias">0</h3>
+                            <p>Notícias Publicadas</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fa-solid fa-calendar"></i>
+                        <div class="stat-info">
+                            <h3 id="dataAtual"></h3>
+                            <p>Data Atual</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Usuários Section -->
+            <section id="usuarios" class="admin-section">
+                <div class="section-header">
+                    <h2>Gerenciar Usuários Admin</h2>
+                    <button class="btn-primary" id="novoUsuario">
+                        <i class="fa-solid fa-plus"></i> Novo Usuário
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Usuário</th>
+                                <th>Data Criação</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usuariosTable">
+                            <!-- Usuários serão carregados aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Notícias Section -->
+            <section id="noticias" class="admin-section">
+                <div class="section-header">
+                    <h2>Gerenciar Notícias</h2>
+                    <button class="btn-primary" id="novaNoticia">
+                        <i class="fa-solid fa-plus"></i> Nova Notícia
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="noticiasTable">
+                            <!-- Notícias serão carregadas aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Novo Usuário -->
+    <div class="modal" id="modalUsuario">
+        <div class="modal-content">
+            <span class="close" id="fecharModalUsuario">&times;</span>
+            <h2 id="tituloModalUsuario">Novo Usuário Admin</h2>
+            <form id="formUsuario">
+                <input type="hidden" id="usuarioId">
+                <div class="form-group">
+                    <label for="nomeUsuario">Nome de Usuário:</label>
+                    <input type="text" id="nomeUsuario" required>
+                </div>
+                <div class="form-group">
+                    <label for="senhaUsuario">Senha:</label>
+                    <input type="password" id="senhaUsuario" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="button" class="btn-secondary" id="cancelarUsuario">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Nova Notícia -->
+    <div class="modal" id="modalNoticia">
+        <div class="modal-content large">
+            <span class="close" id="fecharModalNoticia">&times;</span>
+            <h2 id="tituloModalNoticia">Nova Notícia</h2>
+            <form id="formNoticia">
+                <input type="hidden" id="noticiaId">
+                <div class="form-group">
+                    <label for="tituloNoticia">Título:</label>
+                    <input type="text" id="tituloNoticia" required>
+                </div>
+                <div class="form-group">
+                    <label for="resumoNoticia">Resumo:</label>
+                    <textarea id="resumoNoticia" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="conteudoNoticia">Conteúdo:</label>
+                    <textarea id="conteudoNoticia" rows="6" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="imagemNoticia">URL da Imagem (opcional):</label>
+                    <input type="url" id="imagemNoticia" placeholder="https://exemplo.com/imagem.jpg">
+                </div>
+                <div class="form-group">
+                    <label for="linkNoticia">Link Externo (YouTube/Instagram/etc):</label>
+                    <input type="url" id="linkNoticia" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label for="platformNoticia">Plataforma:</label>
+                    <select id="platformNoticia">
+                        <option value="">Nenhuma</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="highlightNoticia"> Destacar na página inicial</label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Salvar</button>
+                    <button type="button" class="btn-secondary" id="cancelarNoticia">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../Login_Admin/admin.js"></script>
+    <script>
+    // logout via fetch
+    document.getElementById('logout')?.addEventListener('click', function(){
+      if(!confirm('Deseja realmente sair?')) return;
+      fetch('/backend/logout.php').then(()=> window.location.href = '../Pagina_Inicial/index.html');
+    });
+    </script>
+</body>
+</html>
